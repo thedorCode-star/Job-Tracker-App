@@ -1,326 +1,157 @@
-# Job Tracker Backend
+# Job Tracker
 
-REST API for tracking job applications. Users can register, log in, and manage their job listings with statuses such as saved, applied, interview, rejected, and offer.
+![CI](https://github.com/thedorCode-star/Job-Tracker-App/actions/workflows/ci.yml/badge.svg)
 
-## Live API
+Full-stack job application tracker — **React frontend**, **Express REST API**, **PostgreSQL**, **JWT auth**, **24 Playwright tests**, and **CI/CD** on Render.
 
-**Base URL:** [https://job-tracker-api-4anc.onrender.com](https://job-tracker-api-4anc.onrender.com)
+## Live Demo
 
-| Endpoint | URL |
-|----------|-----|
-| Health check | [https://job-tracker-api-4anc.onrender.com/health](https://job-tracker-api-4anc.onrender.com/health) |
-| Register | `POST /api/auth/register` |
-| Login | `POST /api/auth/login` |
-| Jobs | `GET/POST /api/jobs` (requires JWT) |
+| Service | URL |
+|---------|-----|
+| **API** | [https://job-tracker-api-4anc.onrender.com](https://job-tracker-api-4anc.onrender.com) |
+| **Health** | [https://job-tracker-api-4anc.onrender.com/health](https://job-tracker-api-4anc.onrender.com/health) |
+| **Frontend** | Deploy via Render Blueprint (`job-tracker-web`) — URL shown in Render dashboard after deploy |
 
-```bash
-curl https://job-tracker-api-4anc.onrender.com/health
-```
+> Free Render services sleep after 15 min idle. First request may take ~1 minute.
 
-> **Note:** The free Render tier spins down after 15 minutes of inactivity. The first request after sleep may take ~1 minute to respond.
+## For Recruiters
+
+| Resource | Link |
+|----------|------|
+| **Test report** | [GitHub Actions](https://github.com/thedorCode-star/Job-Tracker-App/actions) → latest run → download **playwright-report** artifact |
+| **Test documentation** | [docs/TESTING.md](docs/TESTING.md) |
+| **Postman collection** | [postman/](postman/) — import both JSON files into Postman |
+| **Live API** | Try register → login → create jobs via Postman or the React app |
 
 ## Tech Stack
 
-- **Node.js** + **Express 5**
-- **PostgreSQL** with `pg`
-- **JWT** authentication
-- **bcrypt** for password hashing
-- **Playwright** for API tests
+**Backend:** Node.js, Express 5, PostgreSQL, JWT, bcrypt  
+**Frontend:** React 19, Vite, React Router  
+**Testing:** Playwright (24 API tests)  
+**CI/CD:** GitHub Actions → Render
 
-## Prerequisites
+## Quick Start (Local)
 
-- Node.js 18+
-- PostgreSQL 16+ (or Homebrew `postgresql@18`)
-- npm
-
-## Getting Started
-
-### 1. Clone and install dependencies
+### Backend
 
 ```bash
-git clone <your-repo-url>
-cd job-tracker-backend
 npm install
-```
-
-### 2. Configure environment variables
-
-Create a `.env` file in the project root:
-
-```env
-PORT=5000
-DB_USER=job_user
-DB_HOST=localhost
-DB_NAME=job_tracker
-DB_PASSWORD=your_password_here
-DB_PORT=5432
-JWT_SECRET=your_super_secret_key_change_this_please
-```
-
-> **Note:** Never commit `.env` to git. It is already listed in `.gitignore`.
-
-### 3. Set up PostgreSQL
-
-Create the database user and database:
-
-```bash
-psql -d postgres
-```
-
-```sql
-CREATE USER job_user WITH PASSWORD 'your_password_here';
-CREATE DATABASE job_tracker OWNER job_user;
-GRANT ALL PRIVILEGES ON DATABASE job_tracker TO job_user;
-\q
-```
-
-Load the schema:
-
-```bash
+cp .env.example .env   # edit with your DB credentials
 psql -U job_user -d job_tracker -f init.sql
+npm run dev            # http://localhost:5000
 ```
 
-### 4. Run the server
+### Frontend
 
 ```bash
-# Development (auto-restart on file changes)
-npm run dev
-
-# Production
-npm start
-```
-
-The API runs at `http://localhost:5000` by default.
-
-Verify it is working:
-
-```bash
-curl http://localhost:5000/health
+cd client
+npm install
+cp .env.example .env
+npm run dev            # http://localhost:5173
 ```
 
 ## Scripts
 
 | Command | Description |
 |---------|-------------|
-| `npm run dev` | Start server with nodemon |
-| `npm start` | Start server |
-| `npm test` | Run Playwright API tests |
-| `npm run test:ui` | Run tests in Playwright UI mode |
-| `npm run test:report` | Open the HTML test report |
+| `npm run dev` | Start API with nodemon |
+| `npm start` | Start API (production) |
+| `npm test` | Run 24 Playwright API tests |
+| `npm run test:report` | Open local HTML test report |
+| `cd client && npm run dev` | Start React dev server |
+| `cd client && npm run build` | Build React for production |
 
 ## API Reference
 
 ### Health
 
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| `GET` | `/health` | No | Server health check |
+| Method | Endpoint | Auth |
+|--------|----------|------|
+| `GET` | `/health` | No |
 
 ### Auth
 
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| `POST` | `/api/auth/register` | No | Register a new user |
-| `POST` | `/api/auth/login` | No | Log in and receive a JWT |
+| Method | Endpoint | Auth |
+|--------|----------|------|
+| `POST` | `/api/auth/register` | No |
+| `POST` | `/api/auth/login` | No |
 
-**Register / Login body:**
+### Jobs (Bearer token required)
 
-```json
-{
-  "email": "user@example.com",
-  "password": "password123"
-}
-```
-
-**Success response includes:**
-
-```json
-{
-  "message": "User registered successfully.",
-  "token": "<jwt>",
-  "user": {
-    "id": 1,
-    "email": "user@example.com"
-  }
-}
-```
-
-### Jobs
-
-All job routes require a Bearer token:
-
-```
-Authorization: Bearer <your-jwt-token>
-```
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/api/jobs` | List all jobs for the logged-in user |
-| `GET` | `/api/jobs?status=applied` | Filter jobs by status |
-| `GET` | `/api/jobs/:id` | Get a single job |
-| `POST` | `/api/jobs` | Create a job |
-| `PUT` | `/api/jobs/:id` | Update a job |
-| `DELETE` | `/api/jobs/:id` | Delete a job |
-
-**Create job body:**
-
-```json
-{
-  "title": "Software Engineer",
-  "company": "Acme Corp",
-  "location": "Remote",
-  "job_url": "https://example.com/jobs/123",
-  "status": "saved",
-  "notes": "Found on LinkedIn",
-  "applied_date": "2026-06-01"
-}
-```
-
-`title` and `company` are required. `status` defaults to `saved`.
+| Method | Endpoint |
+|--------|----------|
+| `GET` | `/api/jobs` |
+| `GET` | `/api/jobs?status=applied` |
+| `GET` | `/api/jobs/:id` |
+| `POST` | `/api/jobs` |
+| `PUT` | `/api/jobs/:id` |
+| `DELETE` | `/api/jobs/:id` |
 
 **Valid status values:** `saved`, `applied`, `interview`, `rejected`, `offer`
 
-## Example Requests
+See [postman/](postman/) for a ready-to-import collection with auto-saved JWT tokens.
 
-Replace `BASE_URL` with `http://localhost:5000` locally or `https://job-tracker-api-4anc.onrender.com` in production.
+## Example Requests (Production)
 
 ```bash
-# Health check (production)
 curl https://job-tracker-api-4anc.onrender.com/health
 
-# Register
 curl -X POST https://job-tracker-api-4anc.onrender.com/api/auth/register \
   -H "Content-Type: application/json" \
   -d '{"email":"user@example.com","password":"password123"}'
 
-# Login
-curl -X POST https://job-tracker-api-4anc.onrender.com/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"user@example.com","password":"password123"}'
-
-# Create a job
 curl -X POST https://job-tracker-api-4anc.onrender.com/api/jobs \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <token>" \
   -d '{"title":"Backend Developer","company":"Tech Co","status":"applied"}'
-
-# List jobs
-curl https://job-tracker-api-4anc.onrender.com/api/jobs \
-  -H "Authorization: Bearer <token>"
 ```
 
 ## Project Structure
 
 ```
 job-tracker-backend/
-├── server.js                 # App entry point
+├── client/                   # React frontend (Vite)
+├── server.js                 # API entry point
 ├── init.sql                  # Database schema
-├── playwright.config.js      # Test configuration
-├── tests/
-│   ├── api/                  # API test specs
-│   └── helpers/              # Reusable test helpers
-└── src/
-    ├── controllers/          # Route handlers
-    ├── middleware/           # JWT auth middleware
-    ├── models/               # Database queries
-    └── routes/               # Express routes
+├── render.yaml               # Render Blueprint (API + frontend)
+├── postman/                  # Postman collection for recruiters
+├── docs/                     # Testing & Neon migration guides
+├── tests/                    # Playwright API tests
+└── src/                      # API controllers, models, routes
 ```
 
 ## Testing
 
-Tests use Playwright's HTTP client to exercise the API. The test runner starts the server automatically before running tests.
+24 automated API tests covering auth, jobs CRUD, JWT security, and user isolation.
 
 ```bash
 npm test
 ```
 
-Current coverage includes:
-
-- Health check
-- Auth registration and login (success and validation errors)
-- Job CRUD operations
-- JWT protection and user data isolation
+**Share with recruiters:** [docs/TESTING.md](docs/TESTING.md) — explains how to download the HTML report from GitHub Actions.
 
 ## CI/CD
 
-### CI
-
-GitHub Actions runs on every push and pull request to `main` and `qa-testing`:
-
-1. Starts a PostgreSQL service
-2. Loads `init.sql`
-3. Runs all Playwright API tests (`npm test`)
-
-Workflow file: `.github/workflows/ci.yml`
-
-### CD — Deploy to Render (free tier)
-
-**Why Render?** Free web hosting, free PostgreSQL, no credit card required. Good for portfolio projects.
-
-| Free tier | Limit |
-|-----------|-------|
-| Web service | Spins down after 15 min idle (~1 min cold start) |
-| PostgreSQL | 1 GB storage, **expires after 30 days** (upgrade or migrate data before then) |
-
-> **Tip:** For a database that stays free longer, use [Neon](https://neon.tech) for Postgres and set `DATABASE_URL` in Render manually.
-
-#### Step 1 — Push this code to GitHub
-
-```bash
-git add .
-git commit -m "chore: add Render deployment config"
-git push origin main
+```
+push/PR → GitHub Actions (24 tests) → deploy to Render (main only)
 ```
 
-#### Step 2 — Create services on Render
+- Workflow: [.github/workflows/ci.yml](.github/workflows/ci.yml)
+- Test reports uploaded as **playwright-report** artifact (30-day retention)
+- CI badge at top of this README
 
-1. Go to [render.com](https://render.com) and sign up with GitHub
-2. Click **New → Blueprint**
-3. Connect repo: `thedorCode-star/Job-Tracker-App`
-4. Render reads `render.yaml` and creates:
-   - `job-tracker-api` (web service)
-   - `job-tracker-db` (PostgreSQL)
-5. Click **Apply**
+### Deploy on Render
 
-Your API is live at: [https://job-tracker-api-4anc.onrender.com](https://job-tracker-api-4anc.onrender.com)
+1. **New → Blueprint** → connect `thedorCode-star/Job-Tracker-App`
+2. Apply `render.yaml` (creates API + React static site)
+3. Set **`DATABASE_URL`** in Render → see [docs/NEON_SETUP.md](docs/NEON_SETUP.md)
+4. Add **`RENDER_DEPLOY_HOOK`** to GitHub secrets for CD after CI
 
-Test it:
+### Neon PostgreSQL (recommended)
 
-```bash
-curl https://job-tracker-api-4anc.onrender.com/health
-```
+Render's free Postgres expires after 30 days. Migrate to free [Neon](https://neon.tech):
 
-#### Step 3 — Connect CD to GitHub Actions
-
-After the first deploy:
-
-1. In Render → **job-tracker-api** → **Settings** → **Deploy Hook**
-2. Copy the deploy hook URL
-3. In GitHub → repo **Settings** → **Secrets and variables** → **Actions**
-4. Add secret: `RENDER_DEPLOY_HOOK` = paste the URL
-
-Now every push to `main` runs:
-
-```
-tests pass → GitHub Actions triggers Render deploy
-```
-
-`autoDeploy` is **off** in `render.yaml` so deploys only happen after CI passes.
-
-#### Environment variables on Render
-
-Render sets these automatically from `render.yaml`:
-
-| Variable | Source |
-|----------|--------|
-| `DATABASE_URL` | Linked Postgres database |
-| `JWT_SECRET` | Auto-generated |
-| `NODE_ENV` | `production` |
-| `PORT` | Set by Render |
-
-#### Manual deploy
-
-In Render dashboard → **Manual Deploy → Deploy latest commit**
+→ Full guide: [docs/NEON_SETUP.md](docs/NEON_SETUP.md)
 
 ## Contact
 

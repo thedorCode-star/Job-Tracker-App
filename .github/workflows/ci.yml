@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [main, qa-testing]
 
+permissions:
+  contents: read
+  checks: write
+
 jobs:
   test:
     name: API tests
@@ -55,13 +59,50 @@ jobs:
       - name: Run Playwright API tests
         run: npm test
 
-      - name: Upload Playwright report
+      - name: Publish test summary
+        if: always()
+        run: |
+          {
+            echo "## API Test Results"
+            echo ""
+            if [ -f test-results/junit.xml ]; then
+              TESTS=$(grep -o 'tests="[0-9]*"' test-results/junit.xml | head -1 | grep -o '[0-9]*')
+              FAILURES=$(grep -o 'failures="[0-9]*"' test-results/junit.xml | head -1 | grep -o '[0-9]*')
+              ERRORS=$(grep -o 'errors="[0-9]*"' test-results/junit.xml | head -1 | grep -o '[0-9]*')
+              PASSED=$((TESTS - FAILURES - ERRORS))
+              echo "| Metric | Count |"
+              echo "|--------|-------|"
+              echo "| Total | ${TESTS:-0} |"
+              echo "| Passed | ${PASSED:-0} |"
+              echo "| Failed | ${FAILURES:-0} |"
+              echo ""
+              if [ "${FAILURES:-0}" = "0" ] && [ "${ERRORS:-0}" = "0" ]; then
+                echo "All tests passed."
+              fi
+            else
+              echo "JUnit report not found. Check workflow logs."
+            fi
+            echo ""
+            echo "Download the **playwright-report** artifact from this workflow run for the full HTML report."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload Playwright HTML report
         uses: actions/upload-artifact@v4
-        if: failure()
+        if: always()
         with:
           name: playwright-report
-          path: playwright-report/
-          retention-days: 7
+          path: |
+            playwright-report/
+            test-results/junit.xml
+          retention-days: 30
+
+      - name: Publish JUnit test report
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Playwright API Tests
+          path: test-results/junit.xml
+          reporter: java-junit
 
   deploy:
     name: Deploy to Render
