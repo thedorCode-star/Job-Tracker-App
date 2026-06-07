@@ -2,6 +2,23 @@
 
 REST API for tracking job applications. Users can register, log in, and manage their job listings with statuses such as saved, applied, interview, rejected, and offer.
 
+## Live API
+
+**Base URL:** [https://job-tracker-api-4anc.onrender.com](https://job-tracker-api-4anc.onrender.com)
+
+| Endpoint | URL |
+|----------|-----|
+| Health check | [https://job-tracker-api-4anc.onrender.com/health](https://job-tracker-api-4anc.onrender.com/health) |
+| Register | `POST /api/auth/register` |
+| Login | `POST /api/auth/login` |
+| Jobs | `GET/POST /api/jobs` (requires JWT) |
+
+```bash
+curl https://job-tracker-api-4anc.onrender.com/health
+```
+
+> **Note:** The free Render tier spins down after 15 minutes of inactivity. The first request after sleep may take ~1 minute to respond.
+
 ## Tech Stack
 
 - **Node.js** + **Express 5**
@@ -165,25 +182,30 @@ Authorization: Bearer <your-jwt-token>
 
 ## Example Requests
 
+Replace `BASE_URL` with `http://localhost:5000` locally or `https://job-tracker-api-4anc.onrender.com` in production.
+
 ```bash
+# Health check (production)
+curl https://job-tracker-api-4anc.onrender.com/health
+
 # Register
-curl -X POST http://localhost:5000/api/auth/register \
+curl -X POST https://job-tracker-api-4anc.onrender.com/api/auth/register \
   -H "Content-Type: application/json" \
   -d '{"email":"user@example.com","password":"password123"}'
 
 # Login
-curl -X POST http://localhost:5000/api/auth/login \
+curl -X POST https://job-tracker-api-4anc.onrender.com/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"user@example.com","password":"password123"}'
 
 # Create a job
-curl -X POST http://localhost:5000/api/jobs \
+curl -X POST https://job-tracker-api-4anc.onrender.com/api/jobs \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <token>" \
   -d '{"title":"Backend Developer","company":"Tech Co","status":"applied"}'
 
 # List jobs
-curl http://localhost:5000/api/jobs \
+curl https://job-tracker-api-4anc.onrender.com/api/jobs \
   -H "Authorization: Bearer <token>"
 ```
 
@@ -260,12 +282,12 @@ git push origin main
    - `job-tracker-db` (PostgreSQL)
 5. Click **Apply**
 
-Your API will be live at a URL like: `https://job-tracker-api.onrender.com`
+Your API is live at: [https://job-tracker-api-4anc.onrender.com](https://job-tracker-api-4anc.onrender.com)
 
 Test it:
 
 ```bash
-curl https://job-tracker-api.onrender.com/health
+curl https://job-tracker-api-4anc.onrender.com/health
 ```
 
 #### Step 3 — Connect CD to GitHub Actions
@@ -302,7 +324,7 @@ In Render dashboard → **Manual Deploy → Deploy latest commit**
 
 ## Contact
 
-- GitHub: [@tshimsthedoor](https://github.com/tshimsthedoor)
+- GitHub: [@hedorCode-star](https://github.com/thedorCode-star/)
 - Email: [tshims79@gmail.com](mailto:tshims79@gmail.com)
 
 ## License
