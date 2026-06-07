@@ -219,6 +219,38 @@ Current coverage includes:
 - Job CRUD operations
 - JWT protection and user data isolation
 
+## CI/CD
+
+### CI (set up now)
+
+GitHub Actions runs on every push and pull request to `main` and `qa-testing`:
+
+1. Starts a PostgreSQL service
+2. Loads `init.sql`
+3. Runs all Playwright API tests (`npm test`)
+
+Workflow file: `.github/workflows/ci.yml`
+
+To enable it, commit and push the workflow:
+
+```bash
+git add .github/workflows/ci.yml
+git commit -m "ci: add GitHub Actions workflow for API tests"
+git push
+```
+
+Then open your repo on GitHub → **Actions** tab to see runs.
+
+### CD (later)
+
+Continuous **deployment** can be added when you host the API (e.g. Render, Railway, or Fly.io). Typical flow:
+
+```
+push to main → CI tests pass → auto-deploy to production
+```
+
+That step comes after you pick a hosting provider and add production environment variables.
+
 ## Contact
 
 - GitHub: [@tshimsthedoor](https://github.com/tshimsthedoor)
