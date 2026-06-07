@@ -324,7 +324,7 @@ In Render dashboard → **Manual Deploy → Deploy latest commit**
 
 ## Contact
 
-- GitHub: [@hedorCode-star](https://github.com/thedorCode-star/)
+- GitHub: [@thedorCode-star](https://github.com/thedorCode-star/)
 - Email: [tshims79@gmail.com](mailto:tshims79@gmail.com)
 
 ## License
