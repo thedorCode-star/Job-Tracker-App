@@ -7,7 +7,7 @@ const app = express();
 
 // Import routes (We'll create these next)
 const authRoutes = require('./src/routes/auth.routes')
-const jobRoutes = require('./src/routes/job.routes')
+const jobRoutes = require('./src/routes/jobs.routes')
 
 // Middleware
 app.use(cors());

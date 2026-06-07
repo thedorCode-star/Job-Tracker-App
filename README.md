@@ -1,0 +1,229 @@
+# Job Tracker Backend
+
+REST API for tracking job applications. Users can register, log in, and manage their job listings with statuses such as saved, applied, interview, rejected, and offer.
+
+## Tech Stack
+
+- **Node.js** + **Express 5**
+- **PostgreSQL** with `pg`
+- **JWT** authentication
+- **bcrypt** for password hashing
+- **Playwright** for API tests
+
+## Prerequisites
+
+- Node.js 18+
+- PostgreSQL 16+ (or Homebrew `postgresql@18`)
+- npm
+
+## Getting Started
+
+### 1. Clone and install dependencies
+
+```bash
+git clone <your-repo-url>
+cd job-tracker-backend
+npm install
+```
+
+### 2. Configure environment variables
+
+Create a `.env` file in the project root:
+
+```env
+PORT=5000
+DB_USER=job_user
+DB_HOST=localhost
+DB_NAME=job_tracker
+DB_PASSWORD=your_password_here
+DB_PORT=5432
+JWT_SECRET=your_super_secret_key_change_this_please
+```
+
+> **Note:** Never commit `.env` to git. It is already listed in `.gitignore`.
+
+### 3. Set up PostgreSQL
+
+Create the database user and database:
+
+```bash
+psql -d postgres
+```
+
+```sql
+CREATE USER job_user WITH PASSWORD 'your_password_here';
+CREATE DATABASE job_tracker OWNER job_user;
+GRANT ALL PRIVILEGES ON DATABASE job_tracker TO job_user;
+\q
+```
+
+Load the schema:
+
+```bash
+psql -U job_user -d job_tracker -f init.sql
+```
+
+### 4. Run the server
+
+```bash
+# Development (auto-restart on file changes)
+npm run dev
+
+# Production
+npm start
+```
+
+The API runs at `http://localhost:5000` by default.
+
+Verify it is working:
+
+```bash
+curl http://localhost:5000/health
+```
+
+## Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start server with nodemon |
+| `npm start` | Start server |
+| `npm test` | Run Playwright API tests |
+| `npm run test:ui` | Run tests in Playwright UI mode |
+| `npm run test:report` | Open the HTML test report |
+
+## API Reference
+
+### Health
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `GET` | `/health` | No | Server health check |
+
+### Auth
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `POST` | `/api/auth/register` | No | Register a new user |
+| `POST` | `/api/auth/login` | No | Log in and receive a JWT |
+
+**Register / Login body:**
+
+```json
+{
+  "email": "user@example.com",
+  "password": "password123"
+}
+```
+
+**Success response includes:**
+
+```json
+{
+  "message": "User registered successfully.",
+  "token": "<jwt>",
+  "user": {
+    "id": 1,
+    "email": "user@example.com"
+  }
+}
+```
+
+### Jobs
+
+All job routes require a Bearer token:
+
+```
+Authorization: Bearer <your-jwt-token>
+```
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/jobs` | List all jobs for the logged-in user |
+| `GET` | `/api/jobs?status=applied` | Filter jobs by status |
+| `GET` | `/api/jobs/:id` | Get a single job |
+| `POST` | `/api/jobs` | Create a job |
+| `PUT` | `/api/jobs/:id` | Update a job |
+| `DELETE` | `/api/jobs/:id` | Delete a job |
+
+**Create job body:**
+
+```json
+{
+  "title": "Software Engineer",
+  "company": "Acme Corp",
+  "location": "Remote",
+  "job_url": "https://example.com/jobs/123",
+  "status": "saved",
+  "notes": "Found on LinkedIn",
+  "applied_date": "2026-06-01"
+}
+```
+
+`title` and `company` are required. `status` defaults to `saved`.
+
+**Valid status values:** `saved`, `applied`, `interview`, `rejected`, `offer`
+
+## Example Requests
+
+```bash
+# Register
+curl -X POST http://localhost:5000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"user@example.com","password":"password123"}'
+
+# Login
+curl -X POST http://localhost:5000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"user@example.com","password":"password123"}'
+
+# Create a job
+curl -X POST http://localhost:5000/api/jobs \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <token>" \
+  -d '{"title":"Backend Developer","company":"Tech Co","status":"applied"}'
+
+# List jobs
+curl http://localhost:5000/api/jobs \
+  -H "Authorization: Bearer <token>"
+```
+
+## Project Structure
+
+```
+job-tracker-backend/
+├── server.js                 # App entry point
+├── init.sql                  # Database schema
+├── playwright.config.js      # Test configuration
+├── tests/
+│   ├── api/                  # API test specs
+│   └── helpers/              # Reusable test helpers
+└── src/
+    ├── controllers/          # Route handlers
+    ├── middleware/           # JWT auth middleware
+    ├── models/               # Database queries
+    └── routes/               # Express routes
+```
+
+## Testing
+
+Tests use Playwright's HTTP client to exercise the API. The test runner starts the server automatically before running tests.
+
+```bash
+npm test
+```
+
+Current coverage includes:
+
+- Health check
+- Auth registration and login (success and validation errors)
+- Job CRUD operations
+- JWT protection and user data isolation
+
+## Contact
+
+- GitHub: [@tshimsthedoor](https://github.com/tshimsthedoor)
+- Email: [tshims79@gmail.com](mailto:tshims79@gmail.com)
+
+## License
+
+ISC
