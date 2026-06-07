@@ -221,7 +221,7 @@ Current coverage includes:
 
 ## CI/CD
 
-### CI (set up now)
+### CI
 
 GitHub Actions runs on every push and pull request to `main` and `qa-testing`:
 
@@ -231,25 +231,74 @@ GitHub Actions runs on every push and pull request to `main` and `qa-testing`:
 
 Workflow file: `.github/workflows/ci.yml`
 
-To enable it, commit and push the workflow:
+### CD — Deploy to Render (free tier)
+
+**Why Render?** Free web hosting, free PostgreSQL, no credit card required. Good for portfolio projects.
+
+| Free tier | Limit |
+|-----------|-------|
+| Web service | Spins down after 15 min idle (~1 min cold start) |
+| PostgreSQL | 1 GB storage, **expires after 30 days** (upgrade or migrate data before then) |
+
+> **Tip:** For a database that stays free longer, use [Neon](https://neon.tech) for Postgres and set `DATABASE_URL` in Render manually.
+
+#### Step 1 — Push this code to GitHub
 
 ```bash
-git add .github/workflows/ci.yml
-git commit -m "ci: add GitHub Actions workflow for API tests"
-git push
+git add .
+git commit -m "chore: add Render deployment config"
+git push origin main
 ```
 
-Then open your repo on GitHub → **Actions** tab to see runs.
+#### Step 2 — Create services on Render
 
-### CD (later)
+1. Go to [render.com](https://render.com) and sign up with GitHub
+2. Click **New → Blueprint**
+3. Connect repo: `thedorCode-star/Job-Tracker-App`
+4. Render reads `render.yaml` and creates:
+   - `job-tracker-api` (web service)
+   - `job-tracker-db` (PostgreSQL)
+5. Click **Apply**
 
-Continuous **deployment** can be added when you host the API (e.g. Render, Railway, or Fly.io). Typical flow:
+Your API will be live at a URL like: `https://job-tracker-api.onrender.com`
+
+Test it:
+
+```bash
+curl https://job-tracker-api.onrender.com/health
+```
+
+#### Step 3 — Connect CD to GitHub Actions
+
+After the first deploy:
+
+1. In Render → **job-tracker-api** → **Settings** → **Deploy Hook**
+2. Copy the deploy hook URL
+3. In GitHub → repo **Settings** → **Secrets and variables** → **Actions**
+4. Add secret: `RENDER_DEPLOY_HOOK` = paste the URL
+
+Now every push to `main` runs:
 
 ```
-push to main → CI tests pass → auto-deploy to production
+tests pass → GitHub Actions triggers Render deploy
 ```
 
-That step comes after you pick a hosting provider and add production environment variables.
+`autoDeploy` is **off** in `render.yaml` so deploys only happen after CI passes.
+
+#### Environment variables on Render
+
+Render sets these automatically from `render.yaml`:
+
+| Variable | Source |
+|----------|--------|
+| `DATABASE_URL` | Linked Postgres database |
+| `JWT_SECRET` | Auto-generated |
+| `NODE_ENV` | `production` |
+| `PORT` | Set by Render |
+
+#### Manual deploy
+
+In Render dashboard → **Manual Deploy → Deploy latest commit**
 
 ## Contact
 

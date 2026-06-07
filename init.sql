@@ -25,5 +25,5 @@ CREATE TABLE IF NOT EXISTS jobs (
 );
 
 -- Create sample index for faster queries
-CREATE INDEX idx_jobs_user_id ON jobs(user_id);
-CREATE INDEX idx_jobs_status ON jobs(status);
+CREATE INDEX IF NOT EXISTS idx_jobs_user_id ON jobs(user_id);
+CREATE INDEX IF NOT EXISTS idx_jobs_status ON jobs(status);
